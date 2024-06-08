@@ -18,13 +18,9 @@ type rspStatus struct {
 	Id        string `json:"id"`
 }
 
-func (rs *rspStatus) fromRobot(r *robot.Robot, id string) {
+func RspStatusFromRobot(r *robot.Robot, id string) rspStatus {
 	d, coo := r.Report()
-
-	rs.Direction = string(d)
-	rs.X = coo.X
-	rs.Y = coo.Y
-	rs.Id = id
+	return rspStatus{Direction: string(d), X: coo.X, Y: coo.Y, Id: id}
 }
 
 type reqCreate struct {
@@ -67,8 +63,7 @@ func (rh *RobotHandler) command(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rsp := &rspStatus{}
-	rsp.fromRobot(rb, id)
+	rsp := RspStatusFromRobot(rb, id)
 	j, _ := json.Marshal(rsp)
 	fmt.Fprint(w, string(j))
 }
@@ -94,9 +89,7 @@ func (rh *RobotHandler) create(w http.ResponseWriter, r *http.Request) {
 
 	rh.store.Put(id, rb, r.Context())
 
-	rsp := &rspStatus{}
-
-	rsp.fromRobot(rb, id)
+	rsp := RspStatusFromRobot(rb, id)
 
 	j, _ := json.Marshal(rsp)
 	fmt.Fprint(w, string(j))
@@ -112,9 +105,7 @@ func (rh *RobotHandler) getStatus(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rsp := &rspStatus{}
-
-	rsp.fromRobot(rb, id)
+	rsp := RspStatusFromRobot(rb, id)
 
 	j, _ := json.Marshal(rsp)
 	fmt.Fprint(w, string(j))
