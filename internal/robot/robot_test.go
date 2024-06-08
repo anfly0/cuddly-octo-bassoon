@@ -1,7 +1,9 @@
 package robot
 
 import (
+	"errors"
 	"fmt"
+	"reflect"
 	"testing"
 )
 
@@ -127,6 +129,57 @@ func TestRobotCmd(t *testing.T) {
 
 			if d != tt.want_d || c.X != tt.want_c.X || c.Y != tt.want_c.Y {
 				t.Errorf("failed to process cmd %s. Got: %d %d %s want: %d %d %s", string(tt.cmd), c.X, c.Y, string(d), tt.want_c.X, tt.want_c.Y, string(tt.want_d))
+			}
+		})
+	}
+}
+
+func TestNewRobot(t *testing.T) {
+	type args struct {
+		r Room
+		d rune
+		c Coordinate
+	}
+	tests := []struct {
+		name    string
+		args    args
+		want    *Robot
+		wantErr error
+	}{
+		{
+			name: "Valid robot",
+			args: args{
+				r: Room{X: 3, Y: 3},
+				d: 'N',
+				c: Coordinate{X: 1, Y: 1},
+			},
+			want: &Robot{room: Room{X: 3, Y: 3}, compass: *NewCompass('N'), coordinate: Coordinate{X: 1, Y: 1}},
+		},
+		{
+			name: "Valid robot",
+			args: args{
+				r: Room{X: 3, Y: 3},
+				d: 'N',
+				c: Coordinate{X: 1, Y: 1},
+			},
+			want:    &Robot{room: Room{X: 3, Y: 3}, compass: *NewCompass('N'), coordinate: Coordinate{X: 1, Y: 1}},
+			wantErr: nil,
+		},
+		{
+			name: "Robot created outside the room",
+			args: args{
+				r: Room{X: 1, Y: 1},
+				d: 'N',
+				c: Coordinate{X: 1, Y: 1},
+			},
+			want:    nil,
+			wantErr: errors.New("the robot coordinates are outside the room"),
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got, err := NewRobot(tt.args.r, tt.args.d, tt.args.c); !(reflect.DeepEqual(got, tt.want) && reflect.DeepEqual(err, tt.wantErr)) {
+				t.Errorf("NewRobot() = %v, want %v err %v want %v", got, tt.want, err, tt.wantErr)
 			}
 		})
 	}

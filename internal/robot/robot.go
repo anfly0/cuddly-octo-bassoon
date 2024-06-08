@@ -55,9 +55,15 @@ type Robot struct {
 	l          sync.RWMutex
 }
 
-func NewRobot(r Room, d rune, c Coordinate) *Robot {
+func NewRobot(r Room, d rune, c Coordinate) (*Robot, error) {
 	comp := NewCompass(d)
-	return &Robot{compass: *comp, coordinate: c, room: r}
+
+	if c.X >= r.X || c.Y >= r.Y {
+		// TODO: This should probably be a customer error type.
+		return nil, errors.New("the robot coordinates are outside the room")
+	}
+
+	return &Robot{compass: *comp, coordinate: c, room: r}, nil
 }
 
 func (r *Robot) Cmd(cs string) error {
