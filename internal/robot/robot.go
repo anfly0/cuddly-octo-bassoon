@@ -49,16 +49,15 @@ type Coordinate struct {
 }
 
 type Robot struct {
-	Compass    Compass
-	Room       Room
-	Coordinate Coordinate
+	compass    Compass
+	room       Room
+	coordinate Coordinate
 	l          sync.RWMutex
 }
 
-func NewRobot(r Room, d rune, x, y uint) *Robot {
-	c := NewCompass(d)
-	coo := Coordinate{X: x, Y: y}
-	return &Robot{Compass: *c, Coordinate: coo, Room: r}
+func NewRobot(r Room, d rune, c Coordinate) *Robot {
+	comp := NewCompass(d)
+	return &Robot{compass: *comp, coordinate: c, room: r}
 }
 
 func (r *Robot) Cmd(cs string) error {
@@ -79,26 +78,26 @@ func (r *Robot) doCmd(c rune) error {
 
 	switch c {
 	case 'L':
-		r.Compass.turnL()
+		r.compass.turnL()
 	case 'R':
-		r.Compass.turnR()
+		r.compass.turnR()
 	case 'F':
-		switch r.Compass.current() {
+		switch r.compass.current() {
 		case 'S':
-			if r.Coordinate.Y < r.Room.Y-1 {
-				r.Coordinate.Y++
+			if r.coordinate.Y < r.room.Y-1 {
+				r.coordinate.Y++
 			}
 		case 'E':
-			if r.Coordinate.X < r.Room.X-1 {
-				r.Coordinate.X++
+			if r.coordinate.X < r.room.X-1 {
+				r.coordinate.X++
 			}
 		case 'N':
-			if r.Coordinate.Y > 0 {
-				r.Coordinate.Y--
+			if r.coordinate.Y > 0 {
+				r.coordinate.Y--
 			}
 		case 'W':
-			if r.Coordinate.X > 0 {
-				r.Coordinate.X--
+			if r.coordinate.X > 0 {
+				r.coordinate.X--
 			}
 		}
 	default:
@@ -112,5 +111,5 @@ func (r *Robot) Report() (rune, Coordinate) {
 	r.l.RLock()
 	defer r.l.RUnlock()
 
-	return r.Compass.current(), r.Coordinate
+	return r.compass.current(), r.coordinate
 }

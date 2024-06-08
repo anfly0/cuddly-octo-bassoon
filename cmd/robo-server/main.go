@@ -84,7 +84,7 @@ func (rh *RobotHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rb := &robot.Robot{Room: req.Room, Compass: *robot.NewCompass(rune(req.Direction[0])), Coordinate: req.Start}
+	rb := robot.NewRobot(req.Room, rune(req.Direction[0]), req.Start)
 	id, err := utils.RandId(4)
 
 	if err != nil {
