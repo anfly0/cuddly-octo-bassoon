@@ -1,14 +1,15 @@
 package storage
 
 import (
+	"context"
 	"sync"
 
 	"github.com/anfly0/cuddly-octo-bassoon/internal/robot"
 )
 
 type RobotStore interface {
-	Get(id string) *robot.Robot
-	Put(id string, r *robot.Robot) error
+	Get(id string, ctx context.Context) *robot.Robot
+	Put(id string, r *robot.Robot, ctx context.Context) error
 }
 
 type RobotMemeStore struct {
@@ -21,14 +22,16 @@ func NewRobotMemStore() *RobotMemeStore {
 	return &RobotMemeStore{m: m, l: sync.RWMutex{}}
 }
 
-func (rs *RobotMemeStore) Get(id string) *robot.Robot {
+// In this implementation we ignore the context. But in a robot store where a cancellations makes sense it is useful.
+func (rs *RobotMemeStore) Get(id string, _ context.Context) *robot.Robot {
 	rs.l.RLock()
 	defer rs.l.RUnlock()
 
 	return rs.m[id]
 }
 
-func (rs *RobotMemeStore) Put(id string, r *robot.Robot) error {
+// In this implementation we ignore the context. But in a robot store where a cancellations makes sense it is useful.
+func (rs *RobotMemeStore) Put(id string, r *robot.Robot, _ context.Context) error {
 	rs.l.Lock()
 	defer rs.l.Unlock()
 

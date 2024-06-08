@@ -53,7 +53,7 @@ func (rh *RobotHandler) command(w http.ResponseWriter, r *http.Request) {
 	}
 
 	id := r.PathValue("id")
-	rb := rh.store.Get(id)
+	rb := rh.store.Get(id, r.Context())
 
 	if rb == nil {
 		w.WriteHeader(http.StatusNotFound)
@@ -92,7 +92,7 @@ func (rh *RobotHandler) create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	rh.store.Put(id, rb)
+	rh.store.Put(id, rb, r.Context())
 
 	rsp := &rspStatus{}
 
@@ -105,7 +105,7 @@ func (rh *RobotHandler) create(w http.ResponseWriter, r *http.Request) {
 func (rh *RobotHandler) getStatus(w http.ResponseWriter, r *http.Request) {
 	id := r.PathValue("id")
 
-	rb := rh.store.Get(id)
+	rb := rh.store.Get(id, r.Context())
 
 	if rb == nil {
 		w.WriteHeader(http.StatusNotFound)
