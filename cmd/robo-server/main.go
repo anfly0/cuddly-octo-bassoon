@@ -2,6 +2,7 @@ package main
 
 import (
 	"encoding/json"
+	"flag"
 	"fmt"
 	"net/http"
 
@@ -41,6 +42,7 @@ type RobotHandler struct {
 }
 
 func (rh *RobotHandler) command(w http.ResponseWriter, r *http.Request) {
+
 	req := reqCmd{}
 
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -120,14 +122,18 @@ func (rh *RobotHandler) getStatus(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 
+	addr := flag.String("addr", "", "Ip address the server will listen to")
+	port := flag.String("port", "8080", "Port number the server will listen to")
+	flag.Parse()
 	rh := RobotHandler{store: storage.NewRobotMemStore()}
 
 	http.Handle("POST /robot", Chain(http.HandlerFunc(rh.create), Logging, ContentHeader))
 	http.Handle("GET /robot/{id}", Chain(http.HandlerFunc(rh.getStatus), Logging, ContentHeader))
 	http.Handle("POST /robot/{id}", Chain(http.HandlerFunc(rh.command), Logging, ContentHeader))
 
-	fmt.Println("Starting server on :8080")
-	if err := http.ListenAndServe(":8080", nil); err != nil {
+	s_addr := fmt.Sprintf("%s:%s", *addr, *port)
+	fmt.Printf("Starting server on %s!", s_addr)
+	if err := http.ListenAndServe(s_addr, nil); err != nil {
 		fmt.Println("Error starting server:", err)
 	}
 }
