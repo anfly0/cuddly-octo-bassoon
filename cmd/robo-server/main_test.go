@@ -233,7 +233,6 @@ func TestRobotHandler_command(t *testing.T) {
 
 			bs := rr.Body.Bytes()
 
-			println(string(bs))
 			rsp := rspStatus{}
 			json.Unmarshal(bs, &rsp)
 
