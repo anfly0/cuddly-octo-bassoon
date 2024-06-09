@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"net/http"
 
 	"github.com/anfly0/cuddly-octo-bassoon/internal/robot"
@@ -65,7 +66,7 @@ func (rh *RobotHandler) command(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 
-	fmt.Fprint(w, string(j))
+	io.WriteString(w, string(j))
 }
 
 func (rh *RobotHandler) create(w http.ResponseWriter, r *http.Request) {
@@ -100,7 +101,7 @@ func (rh *RobotHandler) create(w http.ResponseWriter, r *http.Request) {
 	rsp := RspStatusFromRobot(rb, id)
 
 	j, _ := json.Marshal(rsp)
-	fmt.Fprint(w, string(j))
+	io.WriteString(w, string(j))
 }
 
 func (rh *RobotHandler) getStatus(w http.ResponseWriter, r *http.Request) {
@@ -116,7 +117,7 @@ func (rh *RobotHandler) getStatus(w http.ResponseWriter, r *http.Request) {
 	rsp := RspStatusFromRobot(rb, id)
 
 	j, _ := json.Marshal(rsp)
-	fmt.Fprint(w, string(j))
+	io.WriteString(w, string(j))
 }
 
 func main() {
