@@ -66,17 +66,19 @@ func NewRobot(r Room, d rune, c Coordinate) (*Robot, error) {
 	return &Robot{compass: *comp, coordinate: c, room: r}, nil
 }
 
-func (r *Robot) Cmd(cs string) error {
+func (r *Robot) Cmd(cs string) (rune, Coordinate, error) {
 	r.l.Lock()
 	defer r.l.Unlock()
 
 	for _, c := range cs {
 		err := r.doCmd(c)
 		if err != nil {
-			return err
+			d, coo := r.report()
+			return d, coo, err
 		}
 	}
-	return nil
+	d, coo := r.report()
+	return d, coo, nil
 }
 
 func (r *Robot) doCmd(c rune) error {
@@ -113,9 +115,15 @@ func (r *Robot) doCmd(c rune) error {
 	return nil
 }
 
+// This is not thread safe version of the Report function and is used to avoid deadlocks when functions that has taken a exclusive lock needs the report data.
+func (r *Robot) report() (rune, Coordinate) {
+	return r.compass.current(), r.coordinate
+}
+
+// This is a thread safe and exported wrapper for the un-exported report function.
 func (r *Robot) Report() (rune, Coordinate) {
 	r.l.RLock()
 	defer r.l.RUnlock()
 
-	return r.compass.current(), r.coordinate
+	return r.report()
 }

@@ -56,15 +56,15 @@ func (rh *RobotHandler) command(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = rb.Cmd(req.Cmd)
+	d, coo, err := rb.Cmd(req.Cmd)
+
+	rsp := rspStatus{Direction: string(d), X: coo.X, Y: coo.Y, Id: id}
+	j, _ := json.Marshal(rsp)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return
 	}
 
-	rsp := RspStatusFromRobot(rb, id)
-	j, _ := json.Marshal(rsp)
 	fmt.Fprint(w, string(j))
 }
 
