@@ -170,7 +170,7 @@ func TestNewRobot(t *testing.T) {
 			args: args{
 				r: Room{X: 1, Y: 1},
 				d: 'N',
-				c: Coordinate{X: 1, Y: 1},
+				c: Coordinate{X: 1, Y: 0},
 			},
 			want:    nil,
 			wantErr: errors.New("the robot coordinates are outside the room"),
