@@ -91,3 +91,154 @@ func TestRobotHandler_create(t *testing.T) {
 		})
 	}
 }
+
+func TestRobotHandler_getStatus(t *testing.T) {
+
+	robotStore := storage.NewRobotMemStore()
+	robotHandler := RobotHandler{store: robotStore}
+
+	type args struct {
+		robotId string
+		reqId   string
+		room    robot.Room
+		coo     robot.Coordinate
+		d       rune
+	}
+
+	type rsp struct {
+		code int
+	}
+	tests := []struct {
+		name string
+		args args
+		want rsp
+	}{
+		// Make sure all test cases has a uniq id for the robot. All test cases share the same robot store.
+		{
+			name: "Get a robot that is in the store",
+			args: args{robotId: "abc", reqId: "abc", room: robot.Room{X: 1, Y: 1}, coo: robot.Coordinate{X: 0, Y: 0}, d: 'N'},
+			want: rsp{code: http.StatusOK},
+		},
+		{
+			name: "Get a robot that is not in the store",
+			args: args{robotId: "abc", reqId: "abcd", room: robot.Room{X: 1, Y: 1}, coo: robot.Coordinate{X: 0, Y: 0}, d: 'N'},
+			want: rsp{code: http.StatusNotFound},
+		},
+	}
+
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+
+			req, err := http.NewRequest("GET", fmt.Sprintf("/robot/%s", tt.args.reqId), nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.SetPathValue("id", tt.args.reqId)
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(robotHandler.getStatus)
+
+			r, err := robot.NewRobot(tt.args.room, tt.args.d, tt.args.coo)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ctx := context.Background()
+
+			robotStore.Put(tt.args.robotId, r, ctx)
+			handler.ServeHTTP(rr, req)
+
+			// Check the status code
+			if rr.Result().StatusCode != tt.want.code {
+				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.want.code)
+			}
+		})
+	}
+}
+
+func TestRobotHandler_command(t *testing.T) {
+
+	robotStore := storage.NewRobotMemStore()
+	robotHandler := RobotHandler{store: robotStore}
+
+	type args struct {
+		robotId string
+		reqId   string
+		room    robot.Room
+		coo     robot.Coordinate
+		d       rune
+		cmd     string
+	}
+
+	type rsp struct {
+		code   int
+		status rspStatus
+	}
+	tests := []struct {
+		name string
+		args args
+		want rsp
+	}{
+		// Make sure all test cases has a uniq id for the robot (robotId). All test cases share the same robot store.
+		{
+			name: "Command a robot that is in the store",
+			args: args{robotId: "abc", reqId: "abc", room: robot.Room{X: 5, Y: 5}, coo: robot.Coordinate{X: 1, Y: 2}, d: 'N', cmd: "RFRFFRFRF"},
+			want: rsp{code: http.StatusOK, status: rspStatus{Direction: "N", X: 1, Y: 3, Id: "abc"}},
+		},
+		{
+			name: "Command a robot that is not in the store",
+			args: args{robotId: "abc", reqId: "abcd", room: robot.Room{X: 5, Y: 5}, coo: robot.Coordinate{X: 1, Y: 2}, d: 'N', cmd: "RFRFFRFRF"},
+			want: rsp{code: http.StatusNotFound, status: rspStatus{}},
+		},
+		{
+			name: "Command a robot with an invalid command string",
+			args: args{robotId: "abc", reqId: "abc", room: robot.Room{X: 5, Y: 5}, coo: robot.Coordinate{X: 1, Y: 2}, d: 'N', cmd: "RFRFFRFRFAFFFF"},
+			want: rsp{code: http.StatusBadRequest, status: rspStatus{Direction: "N", X: 1, Y: 3, Id: "abc"}},
+		},
+	}
+
+	for _, tt := range tests {
+
+		t.Run(tt.name, func(t *testing.T) {
+			c := reqCmd{Cmd: tt.args.cmd}
+			payload, err := json.Marshal(c)
+			if err != nil {
+				t.Fatal(err)
+			}
+			b := strings.NewReader(string(payload))
+
+			req, err := http.NewRequest("POST", fmt.Sprintf("/robot/%s", tt.args.reqId), b)
+			if err != nil {
+				t.Fatal(err)
+			}
+			req.SetPathValue("id", tt.args.reqId)
+
+			rr := httptest.NewRecorder()
+			handler := http.HandlerFunc(robotHandler.command)
+
+			r, err := robot.NewRobot(tt.args.room, tt.args.d, tt.args.coo)
+			if err != nil {
+				t.Fatal(err)
+			}
+			ctx := context.Background()
+
+			robotStore.Put(tt.args.robotId, r, ctx)
+			handler.ServeHTTP(rr, req)
+
+			// Check the status code
+			if rr.Result().StatusCode != tt.want.code {
+				t.Errorf("wrong status code: got %v want %v", rr.Code, tt.want.code)
+			}
+
+			bs := rr.Body.Bytes()
+
+			println(string(bs))
+			rsp := rspStatus{}
+			json.Unmarshal(bs, &rsp)
+
+			if !reflect.DeepEqual(rsp, tt.want.status) {
+				t.Error("Response body did not match the expected value(s)")
+			}
+		})
+	}
+}
