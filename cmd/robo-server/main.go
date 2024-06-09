@@ -43,7 +43,7 @@ func (rh *RobotHandler) command(w http.ResponseWriter, r *http.Request) {
 
 	err := json.NewDecoder(r.Body).Decode(&req)
 
-	if err != nil {
+	if err != nil || req.Cmd == "" {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
@@ -76,10 +76,18 @@ func (rh *RobotHandler) create(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil || len(req.Direction) == 0 {
 		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, err)
 		return
 	}
 
-	rb, _ := robot.NewRobot(req.Room, rune(req.Direction[0]), req.Start) //TODO: check error.
+	rb, err := robot.NewRobot(req.Room, rune(req.Direction[0]), req.Start)
+
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		fmt.Fprint(w, err)
+		return
+	}
+
 	id, err := utils.RandId(4)
 
 	if err != nil {
