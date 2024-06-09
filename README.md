@@ -1,9 +1,31 @@
+# Robo server
 
-# API Documentation
+## Build & test
 
-## Endpoints
+### Build
 
-### Create a Robot
+To build the robo-server navigate to the root folder off this repo and run `go build ./cmd/robo-server`
+
+### Test
+
+To run all unit tests navigate to the root of this repo and run `go test ./...`
+To run benchmarks run `go test ./... -bench=. -benchmem`  
+
+To analyze performance issues is it useful to run the benchmark(s) with the `-memprofile=mem.prof` or `-cpuprofile=cpu.prof`  flag and then use pprof to get a detailed report.
+
+## Running the server
+
+The robo-server executable accepts the following command line flags:
+
+- **-h** prints an overview of the available flags
+- **-addr** the address of the interface that the server will bind to
+- **-port** the port number the server will bind to
+
+## API Documentation
+
+### Endpoints
+
+#### Create a Robot
 
 **Endpoint:** `POST /robot`
 
