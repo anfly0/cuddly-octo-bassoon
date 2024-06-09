@@ -26,28 +26,41 @@ func NewCompass(d rune) *Compass {
 	return &Compass{index: index}
 }
 
+// Returns the current direction the compass is pointing towards.
 func (c *Compass) current() rune {
 	return directions[c.index]
 }
 
+// Updates the compass to point the next direction that is right of the current direction.
+// N->E->S->W->back to (N)orth
 func (c *Compass) turnR() {
 	c.index = (c.index + 1) % uint(len(directions))
 }
 
+// Updates the compass to point to the next direction that is left of the current direction.
+// back to (N)orth<-E<-S<-W<-N
 func (c *Compass) turnL() {
 	c.index = (c.index - 1 + uint(len(directions))) % uint(len(directions))
 }
 
+// The Room struct is a record of the dimensions of the room that the robot is navigating in.
 type Room struct {
 	X uint `json:"x"`
 	Y uint `json:"y"`
 }
 
+/*
+*
+The Coordinate struct is a record of the robots location in the room.
+Note that a valid coordinate must always have X and Y values that are less that ditto values in the Room.
+*
+*/
 type Coordinate struct {
 	X uint `json:"x"`
 	Y uint `json:"y"`
 }
 
+// The Robot struct contains only unexported fields. Use the exported methods to create/manipulate robots.
 type Robot struct {
 	compass    Compass
 	room       Room
@@ -55,6 +68,7 @@ type Robot struct {
 	l          sync.RWMutex
 }
 
+// Creates a new robot with an initial state according to the argument. If the state is invalid the return value will be nil and an error
 func NewRobot(r Room, d rune, c Coordinate) (*Robot, error) {
 	comp := NewCompass(d)
 
@@ -66,6 +80,11 @@ func NewRobot(r Room, d rune, c Coordinate) (*Robot, error) {
 	return &Robot{compass: *comp, coordinate: c, room: r}, nil
 }
 
+/*
+Cmd executes a series of commands on the robot and returns the new state of the robot.
+The commands will be executed one by one and the robots internal state will be updated.
+If an invalid command is encountered processing is stopped and the latest state of the robot is returned.
+*/
 func (r *Robot) Cmd(cs string) (rune, Coordinate, error) {
 	r.l.Lock()
 	defer r.l.Unlock()
