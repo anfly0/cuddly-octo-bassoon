@@ -4,14 +4,27 @@
 
 ### Build
 
-To build the robo-server navigate to the root folder off this repo and run `go build ./cmd/robo-server`
+To build the robo-server, navigate to the root folder of this repository and run:
+
+```bash
+go build ./cmd/robo-server
+```
 
 ### Test
 
-To run all unit tests navigate to the root of this repo and run `go test ./...`
-To run benchmarks run `go test ./... -bench=. -benchmem`  
+To run all unit tests, navigate to the root of this repository and run:
 
-To analyze performance issues is it useful to run the benchmark(s) with the `-memprofile=mem.prof` or `-cpuprofile=cpu.prof`  flag and then use pprof to get a detailed report.
+```bash
+go test ./...
+```
+
+To run benchmarks use:
+
+```bash
+go test ./... -bench=. -benchmem
+```  
+
+To analyze performance issues, it is useful to run the benchmarks with the -memprofile=mem.prof or -cpuprofile=cpu.prof flags and then use pprof to get a detailed report.
 
 ## Running the server
 
@@ -96,12 +109,12 @@ The robo-server executable accepts the following command line flags:
 
 **Endpoint:** `POST /robot/{id}`
 
-**Description:** This endpoint sends a series of commands to the robot with the specified ID. The robot will process commands up until one of two things occur.
+**Description:** This endpoint sends a series of commands to the robot with the specified ID. The robot will process commands up until one of two things occurs:
 
   1. The command string ends
-  2. The robot encounters an invalid command i.e a command that is not R, L or F. In this case the robot will be left in the state it was after the last valid command was processed.
+  2. The robot encounters an invalid command, i.e., a command that is not R, L, or F. In this case, the robot will be left in the state it was in after the last valid command was processed.
 
-If multiple request are made to this endpoint concurrently the robot is guaranteed to process one series of commands at a time. **The order of processing is however not guaranteed**.
+If multiple request are made to this endpoint concurrently, the robot is guaranteed to process one series of commands at a time. **The order of processing is however not guaranteed**.
 
 **Path Parameters:**
 
