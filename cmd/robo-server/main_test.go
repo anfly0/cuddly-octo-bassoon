@@ -3,12 +3,15 @@ package main
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
+	"reflect"
 	"strings"
 	"testing"
 
 	"github.com/anfly0/cuddly-octo-bassoon/internal/robot"
+	"github.com/anfly0/cuddly-octo-bassoon/internal/storage"
 )
 
 type robotVoidStore struct{}
@@ -69,8 +72,6 @@ func TestRobotHandler_create(t *testing.T) {
 			if err != nil {
 				t.Fatal(err)
 			}
-
-			println(string(payload))
 
 			b := strings.NewReader(string(payload))
 
@@ -240,5 +241,35 @@ func TestRobotHandler_command(t *testing.T) {
 				t.Error("Response body did not match the expected value(s)")
 			}
 		})
+	}
+}
+
+// This can be used together with pprof as a quick an dirty way to find any general perf issues.
+func BenchmarkRobotHandler_create(b *testing.B) {
+
+	voidStore := &robotVoidStore{}
+	robotHandler := RobotHandler{store: voidStore}
+
+	payload, err := json.Marshal(reqCreate{Direction: "N", Room: robot.Room{X: 1, Y: 1}, Start: robot.Coordinate{X: 0, Y: 0}})
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	p := strings.NewReader(string(payload))
+
+	req, err := http.NewRequest("POST", "/robot", p)
+	if err != nil {
+		b.Fatal(err)
+	}
+
+	rr := httptest.NewRecorder()
+	handler := http.HandlerFunc(robotHandler.create)
+
+	for i := 0; i < b.N; i++ {
+		handler.ServeHTTP(rr, req)
+
+		if rr.Code != http.StatusOK {
+			b.Error("Non 200 response.")
+		}
 	}
 }
